@@ -6,12 +6,12 @@ class Simple1:
 	
 	#Every method must has at least 1 arg :self . If it has more than 1, self must be the first
 	def hello(self):
-		print self.name+" says hi."
+		print self.name + " says hi."
 
 #Simple2 extends Simple1
 class Simple2(Simple1):
 	def goodbye(self):
-		print self.name + "says bye."
+		print self.name + " says bye."
 
 me = Simple2("HVN")
 me.hello()

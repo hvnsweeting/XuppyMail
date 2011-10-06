@@ -1,0 +1,22 @@
+INET sockets
+
+"client" sockets
+connect, send reques, destroyed
+
+"server" sockets
+doesn't send any data or receive any data. It just produces "client" sockets, which are created in response to some other "client" socket doing a connect to the host and port we're bound to
+
+"client" socket in web browser and "client" socket in web server are identical - Peer to Peer
+
+Rule the ways 2 client talk:
+send - recv
+read - write - flush
+
+
+client app use "client" sockets
+server use both
+
+blocking socket
+non-blocking socket
+
+STREAM socket

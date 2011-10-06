@@ -10,6 +10,16 @@ doesn't send any data or receive any data. It just produces "client" sockets, wh
 
 Rule the ways 2 client talk:
 send - recv
+socket status: broken after handling 0bytes
+or live forever.
+To ensuring 1 socket is done its jobs, we have 4 ways:
+1. Messages must be fixed length
+2. Messages must be delimited
+3. Knowing how long message are
+4. End by shutting down the connection
+
+shutdown() before close()
+
 read - write - flush
 
 
@@ -20,3 +30,26 @@ blocking socket
 non-blocking socket
 
 STREAM socket
+
+
+_______________________________
+
+Python module: socket (provide the standard BSD Sockets API)
+	Class method:
+		socket.socket(family, type)
+		socket.getfqdn(name) #convert a ip add to fully qualified domain name
+		socket.gethostbyname(hostname) #Resolve a hostname to a string quad dotted IP address.
+		socket.fromfd(fd, family, type) #Create a socket obj from an existing file descriptor
+
+	Instance method:
+	sock.bind((adrs,port)) #bind the socket to add and port
+	sock.accept() #return a client socket
+	sock.listen(backlog) #Place socket into the listening state
+	sock.connect((adrs,port))
+	sock.recv(buflen[, flags])
+	sock.recvfrom( buflen[,flags])
+	sock.send(data [,flags])
+	sock.sendto( date[,flags], addr)
+	sock.close()
+	sock.getsockopt(lvl, optname)
+	sock.setsockopt(lvl, optname, val)

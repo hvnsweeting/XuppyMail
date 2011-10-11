@@ -4,3 +4,4 @@ git status
 git add ten_file
 git commit -m 'comment'
 git push origin master
+git fetch upstream

@@ -1,0 +1,7 @@
+﻿git là công cụ để theo dõi , kiểm soát phiên bản phần mềm
+
+git status
+git add ten_file
+git commit -m 'comment'
+git push origin master
+git fetch upstream

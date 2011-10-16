@@ -1,6 +1,0 @@
-MDA :Dovecot, Courier, Cyrus (IMAP/POP3 server)
-
-mailbox formats: mbox or Maildir
-
-IMAP/POP3 are protocols
-TELNET is a protocol

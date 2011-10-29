@@ -1,4 +1,5 @@
 import socket
+"""Implement SMTP - reinvent the wheel"""
 
 SMTP_PORT = 25
 

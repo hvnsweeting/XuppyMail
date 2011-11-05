@@ -1,19 +1,17 @@
 #!/usr/bin/python
 
-import smtplib
+import simple_smtp
 
 sender = 'hvn@familug.com'
 receivers = ['famihug@hvn.vn']
 
 message = """From: From Person <hvn@familug.com>
 To: To Person <famihug@hvn.vn>
-Subject: Lai bao la khong gui duoc di
-
-Cai nay chay ngon :))
+Subject: First test my simple SMTP
 """
 
 try:
-   smtpObj = smtplib.SMTP('localhost')
+   smtpObj = simple_smtp.SMTP('localhost')
    smtpObj.sendmail(sender, receivers, message)         
    print "Successfully sent email"
 except SMTPException:

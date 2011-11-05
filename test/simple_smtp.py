@@ -1,16 +1,115 @@
+#!/usr/bin/env python
+
+import email.utils
 import socket
+from sys import stderr
+
 """Implement SMTP - reinvent the wheel"""
 
 SMTP_PORT = 25
+CRLF = "\r\n"
+
+__all__ = ["SMTPException"]
+
+class SMTPException(Exception):
+	"""Base class"""
+
+class SMTPServerDisconnected(SMTPException):
+	"""Not connected to any SMTP server"""
+
+class SMTPResponseException(SMTPException):
+	def __init__(self, code, msg):
+		self.smtp_code = code
+		self.smtp_error = msg
+		self.args = (code, msg)
+
+class SMTPConnectError(SMTPResponseException):
+	"""Error during connection establishment."""
+
+def quoteaddr(addr):
+	m = (None, None)
+	try:
+		m = email.util.parseaddr(addr)[1]
+	except AttributeError:
+		pass
+	if m == (None, None):
+		return "<%s>" % addr
+	elif m is None:
+		return "<>"
+	else:
+		return "<%s>" % m
 
 class SMTP:
 	helo_resp = None
-	def __init__(self, host='', port=0, local_hostname=None):
-		#empty
+	file = None
+	def __init__(self, host='', port=25, local_hostname=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
+		self.timeout = timeout
+		self.default_port = SMTP_PORT
+
+		if host:
+			(code, msg) = self.connect(host, port)
+			if code != 220:
+				raise SMTPConnectError(code, msg)
+
+		if local_hostname is not None:
+			self.local_hostname = local_hostname
+		else:
+			fqdn = socket.getfqdn()
+			if '.' in fqdn:
+				self.local_hostname = fqdn
+			else:
+				addr = '127.0.0.1'
+				try:
+					addr = socket.gethostbyname(socket.gethostbyname())
+				except socket.gaierror:
+					pass
+				self.local_hostname = '[%s]' % addr
+
+	def getreply(self):
+		resp = []
+		if self.file is None:
+			self.file = self.sock.makefile('rb')
+		while True:
+			line = self.file.readline()
+			if line == '':
+				self.close()
+				raise SMTPServerDisconnected("Connection unexpectedly closed")
+			resp.append(line[4:].strip())
+			code = line[:3]
+
+			try:
+				errcode = int(code)
+			except ValueError:
+				errcode = -1
+				break
+
+			if line[3:4] != "-":
+				break
+
+		errmsg = "\n".join(resp)
+		return errcode, errmsg
+
+
+	def _get_socket(self, port, host, timeout):
+		return socket.create_connection((port, host), timeout)
+
+	def connect(self, host = 'localhost', port = 0):
+		"""Connect to a host on a given port"""
+		self.sock = self._get_socket(host, port, self.timeout)
+		(code, msg) = self.getreply()
+		return (code, msg)
 
 	
-	def getreply:
-		#TODO
+	def send(self, str):
+		"""Send str to server"""
+		if hasattr(self, 'sock') and self.sock:
+			try:
+				self.sock.sendall(str)
+			except socket.error:
+				self.close()
+				raise SMTPServerDisconnected('Server not connected')
+		else:
+			raise SMTPServerDisconnected('Please run connect() first')
 	
 	def putcmd(self, cmd, args = ""):
 		if args == "":
@@ -24,25 +123,34 @@ class SMTP:
 		"""Send a command and return its response code"""
 		self.putcmd(cmd, args)
 		return self.getreply()
-	
-	#moi ham tuong ung voi 1 SMTP command
-	def sendmail(self, from_addr, to_addrs, msg):
-		#empty
 
+	def connect(self, host='localhost', port = 25):
+		#connect to a given host
+		self.sock = self._get_socket(host, port, self.timeout)
+		(code, msg) = self.getreply()
+		return (code, msg)
+	
+	def sendmail(self, from_addr, to_addrs, msg):
+		(code, resp) = self.mail(from_addr)
+		(code, resp) = self.rcpt(to_addrs)
+		(code, resp) = self.data(msg)
+
+	#moi ham tuong ung voi 1 SMTP command
 	def helo(self, name=''):
 		"""SMTP 'helo' command.
 		default hostname to send defaults to the FQDN of the localhost.		"""
-		self.putcmd("HELO", name or self.local_hostname)
+		self.putcmd("helo", name or self.local_hostname)
 		(code, msg) = self.getreply()
 		self.helo_resp = msg
 		return (code, msg)
 
 	def mail(self, sender):
 		""" SMTP 'MAIL' command"""
-		self.putcmd("MAIL", "FROM:%s" % (quoteaddr(sender)))
+		self.putcmd("mail", "FROM:%s" % (quoteaddr(sender)))
 		return self.getreply()
 
 	def rcpt(self, recip):
+		#TODO - change SMTP command to lower case
 		""" SMTP 'RCPT' command """
 		self.putcmd("RCPT", "TO:%s" % (quoteaddr(recip)))
 		return self.getreply()
@@ -50,8 +158,13 @@ class SMTP:
 	def data(self,msg):
 		self.putcmd("DATA")
 		(code, repl) = self.getreply()
-		#TODO
-		#empty
+		q = msg
+		if q[-2:] != CRLF:
+			q = q + CRLF
+		q = q + "." + CRLF
+		self.send(q)
+		(code ,msg) = self.getreply()
+		return (code, msg)
 
 	def quit(self):
 		"""Terminate the SMTP session."""

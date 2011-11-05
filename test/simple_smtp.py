@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-import re
-import email.utils
 import socket
+import email.utils
+import re
 from sys import stderr
 
 """Implement SMTP - reinvent the wheel"""
@@ -129,7 +129,7 @@ class SMTP:
 		self.putcmd(cmd, args)
 		return self.getreply()
 
-	def connect(self, host='localhost', port = 25):
+	def connect(self, host='localhost', port = 0):
 		#connect to a given host
 		self.sock = self._get_socket(host, port, self.timeout)
 		(code, msg) = self.getreply()
@@ -160,8 +160,7 @@ class SMTP:
 		(code, repl) = self.getreply()
 		if code != 354:
 			raise SMTPException#TODO change later
-		#q = quotedata(msg) #TODO add quotedata make throw Exc
-		q = msg
+		q = quotedata(msg) 
 		if q[-2:] != CRLF:
 			q = q + CRLF
 		q = q + "." + CRLF

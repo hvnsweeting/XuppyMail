@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import re
 import email.utils
 import socket
 from sys import stderr

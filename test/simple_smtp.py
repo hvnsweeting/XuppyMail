@@ -152,11 +152,11 @@ class SMTP:
 	def rcpt(self, recip):
 		#TODO - change SMTP command to lower case
 		""" SMTP 'RCPT' command """
-		self.putcmd("RCPT", "TO:%s" % (quoteaddr(recip)))
+		self.putcmd("rcpt", "TO:%s" % (quoteaddr(recip)))
 		return self.getreply()
 
 	def data(self,msg):
-		self.putcmd("DATA")
+		self.putcmd("data")
 		(code, repl) = self.getreply()
 		q = msg
 		if q[-2:] != CRLF:
@@ -165,6 +165,15 @@ class SMTP:
 		self.send(q)
 		(code ,msg) = self.getreply()
 		return (code, msg)
+
+	def close(self):
+		"""Close connection to the SMTP server"""
+		if self.file:
+			self.file.close()
+		self.file = None
+		if self.sock:
+			self.sock.close()
+		self.sock = None
 
 	def quit(self):
 		"""Terminate the SMTP session."""

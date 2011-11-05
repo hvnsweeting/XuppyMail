@@ -39,6 +39,10 @@ def quoteaddr(addr):
 	else:
 		return "<%s>" % m
 
+def quotedata(data):
+	return re.sub(r'(?m)^\.', '..', 
+			re.sub(r'(?:\r\n|\n|\r(?!\n))', CRLF, data))
+
 class SMTP:
 	helo_resp = None
 	file = None
@@ -130,11 +134,6 @@ class SMTP:
 		(code, msg) = self.getreply()
 		return (code, msg)
 	
-	def sendmail(self, from_addr, to_addrs, msg):
-		(code, resp) = self.mail(from_addr)
-		(code, resp) = self.rcpt(to_addrs)
-		(code, resp) = self.data(msg)
-
 	#moi ham tuong ung voi 1 SMTP command
 	def helo(self, name=''):
 		"""SMTP 'helo' command.
@@ -158,6 +157,9 @@ class SMTP:
 	def data(self,msg):
 		self.putcmd("data")
 		(code, repl) = self.getreply()
+		if code != 354:
+			raise SMTPException#TODO change later
+		#q = quotedata(msg) #TODO add quotedata make throw Exc
 		q = msg
 		if q[-2:] != CRLF:
 			q = q + CRLF
@@ -165,6 +167,22 @@ class SMTP:
 		self.send(q)
 		(code ,msg) = self.getreply()
 		return (code, msg)
+
+	def sendmail(self, from_addr, to_addrs, msg):
+		self.helo()#TODO if needed
+		(code, resp) = self.mail(from_addr)
+		if code != 250:
+			raise SMTPSenderRefused(code, resp, from_addr)
+
+
+		to_addrs = to_addrs[0] #TODO sent to many recp
+		(code, resp) = self.rcpt(to_addrs)
+		if code != 250:
+			raise SMTPServerDisconnected
+		
+		(code, resp) = self.data(msg)
+		if code != 250:
+			raise SMTPConnectError
 
 	def close(self):
 		"""Close connection to the SMTP server"""

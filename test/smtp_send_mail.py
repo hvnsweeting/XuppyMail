@@ -3,15 +3,15 @@
 import simple_smtp
 
 sender = 'hvn@familug.com'
-receivers = ['famihug@hvn.vn']
+receivers = ['hvnsweeting@hvnbox']
 
 message = """From: From Person <hvn@familug.com>
-To: To Person <famihug@hvn.vn>
+To: To Person <hvnsweeting@hvnbox>
 Subject: First test my simple SMTP
 """
 
 try:
-   smtpObj = simple_smtp.SMTP('localhost')
+   smtpObj = simple_smtp.SMTP('localhost', 25)
    smtpObj.sendmail(sender, receivers, message)         
    print "Successfully sent email"
 except SMTPException:

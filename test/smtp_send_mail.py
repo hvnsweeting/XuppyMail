@@ -3,7 +3,7 @@
 import simple_smtp
 
 sender = 'hvn@familug.com'
-receivers = ['hvnsweeting@hvnbox']
+receivers = ['hvnsweeting@hvn.vn']
 
 message = """From: From Person <hvn@familug.com>
 To: To Person <hvnsweeting@hvnbox>

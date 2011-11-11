@@ -150,7 +150,6 @@ class SMTP:
 		return self.getreply()
 
 	def rcpt(self, recip):
-		#TODO - change SMTP command to lower case
 		""" SMTP 'RCPT' command """
 		self.putcmd("rcpt", "TO:%s" % (quoteaddr(recip)))
 		return self.getreply()

@@ -3,11 +3,12 @@
 import simple_smtp
 
 sender = 'hvn@familug.com'
-receivers = ['hvnsweeting@hvn.vn']
+receivers = ['famihug@hvn.vn']
 
 message = """From: From Person <hvn@familug.com>
-To: To Person <hvnsweeting@hvnbox>
+To: To Person <famihug@hvn.vn>
 Subject: First test my simple SMTP
+Meo meo meo rua mat nhu meo
 """
 
 try:

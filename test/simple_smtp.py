@@ -157,8 +157,9 @@ class SMTP:
 	def data(self,msg):
 		self.putcmd("data")
 		(code, repl) = self.getreply()
-		if code != 354:
-			raise SMTPException#TODO change later
+		#TODO below code is bug
+		#if code != 354:
+		#	raise SMTPException#TODO change later
 		q = quotedata(msg) 
 		if q[-2:] != CRLF:
 			q = q + CRLF
@@ -177,7 +178,7 @@ class SMTP:
 		to_addrs = to_addrs[0] #TODO sent to many recp
 		(code, resp) = self.rcpt(to_addrs)
 		if code != 250:
-			raise SMTPServerDisconnected
+		   raise SMTPServerDisconnected
 		
 		(code, resp) = self.data(msg)
 		if code != 250:

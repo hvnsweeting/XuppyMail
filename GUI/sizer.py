@@ -29,7 +29,7 @@ class MainWindow(wx.Frame):
 		self.buttons = []
 		for i in range(0,6):
 			self.buttons.append(wx.Button(self, -1, "Button &"+str(i)))
-			self.sizer2.Add(self.buttons[i], 1, wx.EXPAND)
+			self.sizer2.Add(self.buttons[i], 1, wx.EXPAND) #first arg is control, second if resize ratio (1,2,3). If = 0 : no resize.:w
 
 		#use some sizer
 		self.sizer = wx.BoxSizer(wx.VERTICAL)

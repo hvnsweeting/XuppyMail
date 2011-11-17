@@ -1,3 +1,4 @@
+import smtplib #TODO change to Mine later
 import wx
 import os
 
@@ -76,8 +77,11 @@ class ComposerPanel(wx.Panel):
 		#3 buttons Clear - Send - Cancel
 		self.clearBtn = wx.Button(self, label="Clear")
 		buttonHSizer.Add(self.clearBtn, 0)
+
 		self.sendBtn = wx.Button(self, label="Send")
+		self.Bind(wx.EVT_BUTTON, self.SendClick, self.sendBtn)
 		buttonHSizer.Add(self.sendBtn, 0)
+
 		self.cancelBtn = wx.Button(self, label="Cancel")
 		buttonHSizer.Add(self.cancelBtn, 0)
 
@@ -86,7 +90,18 @@ class ComposerPanel(wx.Panel):
 		mainVSizer.Add(subjectHSizer, 0, wx.EXPAND)
 		mainVSizer.Add(self.contentTc, 1, wx.EXPAND)
 		mainVSizer.Add(buttonHSizer, 0, wx.ALL, 5)
+
 		self.SetSizerAndFit(mainVSizer)
+
+	def SendClick(self, event):
+		"""Send mail """
+		#sender = 'hacker@x.vn'
+		sender = self.fromTc.GetValue()
+		recp = self.recvTc.GetValue()
+		msg = self.contentTc.GetValue()
+		s = smtplib.SMTP('localhost')
+		s.sendmail(sender, recp, msg)
+
 
 app = wx.App(False)
 frame = ComposerFrame(None, "XuppyMail")

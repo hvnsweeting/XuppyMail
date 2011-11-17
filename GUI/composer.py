@@ -159,6 +159,9 @@ class InboxPanel(wx.Panel):
 		#LIST
 		self.listBtn = wx.Button(self, label="LIST")
 
+		#STAT
+		self.statBtn = wx.Button(self, label="STAT")
+
 		#RETR
 		self.retrCtrl = wx.TextCtrl(self, size=(-1,-1))
 		self.retrBtn = wx.Button(self, label="RETR")
@@ -172,6 +175,7 @@ class InboxPanel(wx.Panel):
 		gridSizer.Add(self.deleCtrl, pos=(0,2))
 		gridSizer.Add(self.deleBtn, pos=(0,3))
 		gridSizer.Add(self.listBtn, pos=(0,5))
+		gridSizer.Add(self.statBtn, pos=(0,6))
 
 		inboxVSizer.Add(gridSizer, 0, wx.ALIGN_RIGHT)
 

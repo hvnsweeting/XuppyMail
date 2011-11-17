@@ -76,14 +76,12 @@ class ComposerPanel(wx.Panel):
 
 		#3 buttons Clear - Send - Cancel
 		self.clearBtn = wx.Button(self, label="Clear")
+		self.Bind(wx.EVT_BUTTON, self.ClearClick, self.clearBtn)
 		buttonHSizer.Add(self.clearBtn, 0)
 
 		self.sendBtn = wx.Button(self, label="Send")
 		self.Bind(wx.EVT_BUTTON, self.SendClick, self.sendBtn)
 		buttonHSizer.Add(self.sendBtn, 0)
-
-		self.cancelBtn = wx.Button(self, label="Cancel")
-		buttonHSizer.Add(self.cancelBtn, 0)
 
 		mainVSizer.Add(fromHSizer, 0, wx.EXPAND)
 		mainVSizer.Add(recvHSizer, 0, wx.EXPAND)
@@ -95,12 +93,15 @@ class ComposerPanel(wx.Panel):
 
 	def SendClick(self, event):
 		"""Send mail """
-		#sender = 'hacker@x.vn'
 		sender = self.fromTc.GetValue()
 		recp = self.recvTc.GetValue()
 		msg = self.contentTc.GetValue()
 		s = smtplib.SMTP('localhost')
 		s.sendmail(sender, recp, msg)
+
+	def ClearClick(self, event):
+		"""Clear content control"""
+		self.contentTc.Clear()
 
 
 app = wx.App(False)

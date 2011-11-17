@@ -7,7 +7,7 @@ import os
 class ComposerFrame(wx.Frame):
 	"""Frame for mail composer"""
 	def __init__(self, parent, title):
-		wx.Frame.__init__(self, parent, title=title, size=(500,400))
+		wx.Frame.__init__(self, parent, title=title, size=(600,400))
 
 		#Setting up the menu bar
 		fileMenu = wx.Menu()
@@ -117,7 +117,7 @@ class InboxPanel(wx.Panel):
 	"""Inbox panel tab"""
 	def __init__(self, parent):
 		wx.Panel.__init__(self,parent)
-
+		self.popObject = None
 
 		#Sizers
 		inboxVSizer = wx.BoxSizer(wx.VERTICAL)
@@ -162,21 +162,25 @@ class InboxPanel(wx.Panel):
 
 		#LIST
 		self.listBtn = wx.Button(self, label="LIST")
+		self.Bind(wx.EVT_BUTTON, self.ListClick, self.listBtn)
 
 		#STAT
 		self.statBtn = wx.Button(self, label="STAT")
+		self.Bind(wx.EVT_BUTTON, self.StatClick, self.statBtn)
 
 		#RETR
-		self.retrCtrl = wx.TextCtrl(self, size=(-1,-1))
+		self.retrTc = wx.TextCtrl(self, size=(-1,-1))
 		self.retrBtn = wx.Button(self, label="RETR")
+		self.Bind(wx.EVT_BUTTON, self.RetrClick, self.retrBtn)
 
 		#DELE
-		self.deleCtrl = wx.TextCtrl(self, size=(-1,-1))
+		self.deleTc = wx.TextCtrl(self, size=(-1,-1))
 		self.deleBtn = wx.Button(self, label="DELE")
+		self.Bind(wx.EVT_BUTTON, self.DeleClick, self.deleBtn)
 
-		gridSizer.Add(self.retrCtrl, pos=(0,0))
+		gridSizer.Add(self.retrTc, pos=(0,0))
 		gridSizer.Add(self.retrBtn, pos=(0,1))
-		gridSizer.Add(self.deleCtrl, pos=(0,2))
+		gridSizer.Add(self.deleTc, pos=(0,2))
 		gridSizer.Add(self.deleBtn, pos=(0,3))
 		gridSizer.Add(self.listBtn, pos=(0,5))
 		gridSizer.Add(self.statBtn, pos=(0,6))
@@ -185,23 +189,66 @@ class InboxPanel(wx.Panel):
 
 		self.SetSizerAndFit(inboxVSizer)
 
+	def PrintSl(self):
+		"""Print a separate line """
+		sp = '-' * 20 + '*' * 10 + '-' * 20 + '\n'
+		self.logTc.AppendText(sp)
+	
+	def ListClick(self, event):
+		"""Send LIST POP3's command"""
+		if self.loginStatus:
+			listMsg = list(self.popObject.list())
+			l = list(listMsg)
+			parsed = ''
+			for i in l:
+				parsed += str(i) + '\n'
+			self.logTc.AppendText(parsed)
+
+	def StatClick(self, event):
+		"""Send STAT command"""
+		if self.loginStatus:
+			statMsg = list(self.popObject.stat())
+			parsed = 'You have ' + str(statMsg[0]) + ' mails = ' + str(statMsg[1]) + ' bytes\n'
+			self.logTc.AppendText(parsed)
+
+	def RetrClick(self, event):
+		"""Send RETR command"""
+		#TODO add check if a message is deleted
+		if self.loginStatus:
+			retrMsg = self.popObject.retr(int(self.retrTc.GetValue()))
+			parsed = ''
+			for i in retrMsg:
+				if isinstance(i, list):
+					for k in i:
+						parsed += k + '\n'
+				else: parsed += str(i) + '\n'
+
+			self.logTc.AppendText(parsed)
+			self.PrintSl()
+			
+	def DeleClick(self, event):
+		"""Send DELE command"""
+		if self.loginStatus:
+			deleMsg = self.popObject.dele(int(self.deleTc.GetValue()))
+			self.logTc.AppendText(deleMsg)
+
 	def LoginClick(self, event):
-		"""Create POP3 object which connect to specified host, port"""
+		"""Create POP3 object which connect to specified host, port and login"""
 		host = self.hostTc.GetValue()
 		port = self.portTc.GetValue()
 		username = self.userTc.GetValue()
 		passwd = self.passTc.GetValue()
 
 		#TODO check port empty
-		popObject = poplib.POP3(host, int(port))
+		self.popObject = poplib.POP3(host, int(port))
 
 		#this var help check whether user logged in or not
 		self.loginStatus = False
 
-		userMsg = popObject.user(username)
-		passMsg = popObject.pass_(passwd)
+		userMsg = self.popObject.user(username)
+		passMsg = self.popObject.pass_(passwd)
 
-		self.logTc.AppendText(popObject.getwelcome() + '\n')
+		self.logTc.AppendText(self.popObject.getwelcome() + '\n')
 		self.logTc.AppendText('USER: ' + username + '\n' + userMsg + '\n')
 		self.logTc.AppendText('PASS: ' + passMsg + '\n')
 

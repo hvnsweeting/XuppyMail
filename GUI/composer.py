@@ -45,32 +45,33 @@ class ComposerPanel(wx.Panel):
 
 		#Create some sizer
 		mainVSizer = wx.BoxSizer(wx.VERTICAL)
-		gridSizer = wx.GridBagSizer(hgap=5, vgap=5)
 		buttonHSizer = wx.BoxSizer(wx.HORIZONTAL)
+		fromHSizer = wx.BoxSizer(wx.HORIZONTAL)
+		recvHSizer = wx.BoxSizer(wx.HORIZONTAL)
+		subjectHSizer = wx.BoxSizer(wx.HORIZONTAL)
+		
 
 		self.fromLbl = wx.StaticText(self, label="From:")
-		gridSizer.Add(self.fromLbl, pos=(0,0))
-		#From text control
+		fromHSizer.Add(self.fromLbl, 0, wx.EXPAND)
+		##From text control
 		self.fromTc = wx.TextCtrl(self, size=(-1,-1))
-		gridSizer.Add(self.fromTc, pos=(0,1))
+		fromHSizer.Add(self.fromTc, 1, wx.EXPAND)
 
 
 		self.recvLbl = wx.StaticText(self, label="Recipients:")
-		gridSizer.Add(self.recvLbl, pos=(1,0))
+		recvHSizer.Add(self.recvLbl, 0, wx.EXPAND)
 		#Receivers text control
 		self.recvTc = wx.TextCtrl(self, size=(-1, -1))
-		gridSizer.Add(self.recvTc, pos=(1,1))
+		recvHSizer.Add(self.recvTc, 1, wx.EXPAND)
 
 		self.subjectLbl = wx.StaticText(self, label="Subject:")
-		gridSizer.Add(self.subjectLbl, pos=(2,0))
+		subjectHSizer.Add(self.subjectLbl, 0, wx.EXPAND)
 		#Subject tc
 		self.subjectTc = wx.TextCtrl(self, size=(-1, -1)) 
-		gridSizer.Add(self.subjectTc, pos=(2,1))
+		subjectHSizer.Add(self.subjectTc, 1, wx.EXPAND)
 
 		#Content tc - multiline
 		self.contentTc = wx.TextCtrl(self, style=wx.TE_MULTILINE)
-
-
 
 		#3 buttons Clear - Send - Cancel
 		self.clearBtn = wx.Button(self, label="Clear")
@@ -80,7 +81,9 @@ class ComposerPanel(wx.Panel):
 		self.cancelBtn = wx.Button(self, label="Cancel")
 		buttonHSizer.Add(self.cancelBtn, 0)
 
-		mainVSizer.Add(gridSizer, 0, wx.ALL, 5)
+		mainVSizer.Add(fromHSizer, 0, wx.EXPAND)
+		mainVSizer.Add(recvHSizer, 0, wx.EXPAND)
+		mainVSizer.Add(subjectHSizer, 0, wx.EXPAND)
 		mainVSizer.Add(self.contentTc, 1, wx.EXPAND)
 		mainVSizer.Add(buttonHSizer, 0, wx.ALL, 5)
 		self.SetSizerAndFit(mainVSizer)

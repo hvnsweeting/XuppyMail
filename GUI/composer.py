@@ -10,7 +10,8 @@ class ComposerFrame(wx.Frame):
 
 		#Setting up the menu bar
 		fileMenu = wx.Menu()
-		menuAbout = fileMenu.Append(wx.wx.ID_ABOUT, "&About", "Information about this program")
+		menuAbout = fileMenu.Append(wx.ID_ABOUT, "&About", "Information about this program")
+		#menuLogin = fileMenu.Append(wx.ID_ANY, "&Login", "Login")
 		menuExit = fileMenu.Append(wx.ID_EXIT, "E&xit", "Terminate the program")
 
 		#Create the menu bar
@@ -20,6 +21,7 @@ class ComposerFrame(wx.Frame):
 		
 		#Set menu events
 		self.Bind(wx.EVT_MENU, self.OnAbout, menuAbout)
+		#self.Bind(wx.EVT_MENU, self.OnLogin, menuLogin)
 		self.Bind(wx.EVT_MENU, self.OnExit, menuExit)
 
 		#Status bar
@@ -32,13 +34,17 @@ class ComposerFrame(wx.Frame):
 		aboutDialog = wx.MessageDialog(self, "XuppyMail - a simple mail client ")
 		aboutDialog.ShowModal()
 		aboutDialog.Destroy()
+	
+	#def OnLogin(self, e):
+	#	loginDialog = wx.PasswordEntryDialog(self, "Login")
+	#	loginDialog.ShowModal()
+	#	loginDialog.Destroy()
 
 	def OnExit(self, e):
 		self.Close(True) #Close the frame
 
 
-
-
+#Composer panel tab
 class ComposerPanel(wx.Panel):
 	"""Panel for mail composer"""
 	def __init__(self, parent):
@@ -74,7 +80,7 @@ class ComposerPanel(wx.Panel):
 		#Content tc - multiline
 		self.contentTc = wx.TextCtrl(self, style=wx.TE_MULTILINE)
 
-		#3 buttons Clear - Send - Cancel
+		#buttons Clear - Send 
 		self.clearBtn = wx.Button(self, label="Clear")
 		self.Bind(wx.EVT_BUTTON, self.ClearClick, self.clearBtn)
 		buttonHSizer.Add(self.clearBtn, 0)
@@ -96,6 +102,7 @@ class ComposerPanel(wx.Panel):
 		sender = self.fromTc.GetValue()
 		recp = self.recvTc.GetValue()
 		msg = self.contentTc.GetValue()
+		#TODO need a parser to parse email address to host address
 		s = smtplib.SMTP('localhost')
 		s.sendmail(sender, recp, msg)
 
@@ -103,10 +110,79 @@ class ComposerPanel(wx.Panel):
 		"""Clear content control"""
 		self.contentTc.Clear()
 
+#Inbox panel tab
+class InboxPanel(wx.Panel):
+	"""Inbox panel tab"""
+	def __init__(self, parent):
+		wx.Panel.__init__(self,parent)
+
+		#Sizers
+		inboxVSizer = wx.BoxSizer(wx.VERTICAL)
+		gridSizer = wx.GridBagSizer(hgap=5, vgap=5)
+		bindHSizer = wx.BoxSizer(wx.HORIZONTAL)
+		loginHSizer = wx.BoxSizer(wx.HORIZONTAL)
+
+		#Login : host, port, user, pass
+		self.hostLbl = wx.StaticText(self, label="Host:")
+		self.hostTc = wx.TextCtrl(self, size=(-1,-1))
+		bindHSizer.Add(self.hostLbl, 0, wx.EXPAND)
+		bindHSizer.Add(self.hostTc, 1, wx.EXPAND)
+
+		self.portLbl = wx.StaticText(self, label="Port:")
+		self.portTc = wx.TextCtrl(self, size=(-1,-1))
+		bindHSizer.Add(self.portLbl, 0, wx.EXPAND)
+		bindHSizer.Add(self.portTc, 1, wx.EXPAND)
+
+		#Login
+		self.userLbl = wx.StaticText(self, label="Username:")
+		self.userTc = wx.TextCtrl(self, size=(-1,-1))
+		loginHSizer.Add(self.userLbl, 0, wx.EXPAND)
+		loginHSizer.Add(self.userTc, 1, wx.EXPAND)
+
+		self.passLbl = wx.StaticText(self, label="Password:")
+		self.passTc = wx.TextCtrl(self, size=(-1,-1), style=wx.TE_PASSWORD)
+		self.loginBtn = wx.Button(self, label="Login")
+
+		loginHSizer.Add(self.passLbl, 0, wx.EXPAND)
+		loginHSizer.Add(self.passTc, 1, wx.EXPAND)
+		loginHSizer.Add(self.loginBtn, 0, wx.EXPAND)
+
+
+		inboxVSizer.Add(bindHSizer, 0, wx.EXPAND)
+		inboxVSizer.Add(loginHSizer, 0, wx.EXPAND)
+
+
+		#Multiline text control
+		self.logTc = wx.TextCtrl(self, style=wx.TE_MULTILINE)
+		inboxVSizer.Add(self.logTc, 1, wx.EXPAND)
+
+		#LIST
+		self.listBtn = wx.Button(self, label="LIST")
+
+		#RETR
+		self.retrCtrl = wx.TextCtrl(self, size=(-1,-1))
+		self.retrBtn = wx.Button(self, label="RETR")
+
+		#DELE
+		self.deleCtrl = wx.TextCtrl(self, size=(-1,-1))
+		self.deleBtn = wx.Button(self, label="DELE")
+
+		gridSizer.Add(self.retrCtrl, pos=(0,0))
+		gridSizer.Add(self.retrBtn, pos=(0,1))
+		gridSizer.Add(self.deleCtrl, pos=(0,2))
+		gridSizer.Add(self.deleBtn, pos=(0,3))
+		gridSizer.Add(self.listBtn, pos=(0,5))
+
+		inboxVSizer.Add(gridSizer, 0, wx.ALIGN_RIGHT)
+
+		self.SetSizerAndFit(inboxVSizer)
+
 
 app = wx.App(False)
 frame = ComposerFrame(None, "XuppyMail")
-dframe = wx.Frame(None)
-composer = ComposerPanel(frame)
-frame.Show()
+#composer = ComposerPanel(frame)
+nb = wx.Notebook(frame)
+
+nb.AddPage(InboxPanel(nb), "Inbox")
+nb.AddPage(ComposerPanel(nb), "Composer")
 app.MainLoop()

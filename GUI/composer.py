@@ -1,4 +1,5 @@
 import smtplib #TODO change to Mine later
+import poplib #TODO change to mine later
 import wx
 import os
 
@@ -26,6 +27,7 @@ class ComposerFrame(wx.Frame):
 
 		#Status bar
 		self.CreateStatusBar()
+		self.SetStatusText("Not login")
 
 		#Show frame
 		self.Show()
@@ -116,6 +118,7 @@ class InboxPanel(wx.Panel):
 	def __init__(self, parent):
 		wx.Panel.__init__(self,parent)
 
+
 		#Sizers
 		inboxVSizer = wx.BoxSizer(wx.VERTICAL)
 		gridSizer = wx.GridBagSizer(hgap=5, vgap=5)
@@ -142,6 +145,7 @@ class InboxPanel(wx.Panel):
 		self.passLbl = wx.StaticText(self, label="Password:")
 		self.passTc = wx.TextCtrl(self, size=(-1,-1), style=wx.TE_PASSWORD)
 		self.loginBtn = wx.Button(self, label="Login")
+		self.Bind(wx.EVT_BUTTON, self.LoginClick, self.loginBtn)
 
 		loginHSizer.Add(self.passLbl, 0, wx.EXPAND)
 		loginHSizer.Add(self.passTc, 1, wx.EXPAND)
@@ -153,7 +157,7 @@ class InboxPanel(wx.Panel):
 
 
 		#Multiline text control
-		self.logTc = wx.TextCtrl(self, style=wx.TE_MULTILINE)
+		self.logTc = wx.TextCtrl(self, style=wx.TE_MULTILINE | wx.TE_READONLY)
 		inboxVSizer.Add(self.logTc, 1, wx.EXPAND)
 
 		#LIST
@@ -180,6 +184,36 @@ class InboxPanel(wx.Panel):
 		inboxVSizer.Add(gridSizer, 0, wx.ALIGN_RIGHT)
 
 		self.SetSizerAndFit(inboxVSizer)
+
+	def LoginClick(self, event):
+		"""Create POP3 object which connect to specified host, port"""
+		host = self.hostTc.GetValue()
+		port = self.portTc.GetValue()
+		username = self.userTc.GetValue()
+		passwd = self.passTc.GetValue()
+
+		#TODO check port empty
+		popObject = poplib.POP3(host, int(port))
+
+		#this var help check whether user logged in or not
+		self.loginStatus = False
+
+		userMsg = popObject.user(username)
+		passMsg = popObject.pass_(passwd)
+
+		self.logTc.AppendText(popObject.getwelcome() + '\n')
+		self.logTc.AppendText('USER: ' + username + '\n' + userMsg + '\n')
+		self.logTc.AppendText('PASS: ' + passMsg + '\n')
+
+		self.loginStatus = passMsg.__eq__('+OK Logged in.')
+		if self.loginStatus:
+			#Set all text control to immutable
+			self.hostTc.SetEditable(False)
+			self.portTc.SetEditable(False)
+			self.userTc.SetEditable(False)
+			self.passTc.SetEditable(False)
+			#get current frame and set status text
+			self.GetParent().GetParent().SetStatusText('Logged in') 
 
 
 app = wx.App(False)

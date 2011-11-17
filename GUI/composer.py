@@ -3,6 +3,9 @@ import poplib #TODO change to mine later
 import wx
 import os
 
+#TODO attach file
+#TODO Implement Pop3
+#TODO split to many separate files
 #NOTE: each control should use only once. If use more, they will break the form, and should add one to boxer right after we create it.
 class ComposerFrame(wx.Frame):
 	"""Frame for mail composer"""
@@ -107,6 +110,7 @@ class ComposerPanel(wx.Panel):
 		#TODO need a parser to parse email address to host address
 		s = smtplib.SMTP('localhost')
 		s.sendmail(sender, recp, msg)
+		#TODO change status bar if mail sented
 
 	def ClearClick(self, event):
 		"""Clear content control"""

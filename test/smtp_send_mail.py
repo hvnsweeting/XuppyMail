@@ -8,7 +8,7 @@ receivers = ['famihug@hvn.vn']
 message = """From: From Person <hvn@familug.com>
 To: To Person <famihug@hvn.vn>
 Subject: First test my simple SMTP
-Meo meo meo rua mat nhu meo
+Thang NAM bi dien
 """
 
 try:

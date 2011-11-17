@@ -2,7 +2,7 @@ FamiHug
 famihug@gmail.com
 
 XuppyMail is an email-client, which is written from scratch in Python.
-XuppyMail is created to recreate the wheel.
+XuppyMail is created to recreate the wheel. It has nothing special, just a try with python lib and wxpython
 
 We implement SMTP for archiving network protocol knowledge.
 

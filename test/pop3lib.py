@@ -19,7 +19,7 @@ class POP3:
 	"""Implement POP3"""
 	def __init__(self, host='localhost', port=POP3_PORT, timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
 		self.host = host
-		selt.port = port
+		self.port = port
 		self.sock = socket.create_connection((host, port), timeout)
 		self.file = self.sock.makefile('rb')
 		self._debugging = 0
@@ -50,17 +50,26 @@ class POP3:
 		""" Get a response from the server.
 	 Raise 'error_proto' if response doesn't start with '+'"""
 		resp, o = self._getline()
-		if self._debugging > 1: print '*resp*', resp(resp)
+		if self._debugging > 1: print '*resp*', repr(resp)
 		c = resp[:1]#get first return char
-		if c!= '+':
+		if c != '+':
 			raise error_proto(resp)
 		return resp
+
+#	def _getresp(self):
+#		resp, o = self._getline()
+#		if self._debugging > 1: print '*resp*', repr(resp)
+#		c = resp[:1]
+#		if c != '+':
+#			print resp
+#		    #raise error_proto(resp)
+#		return resp
 
 	def _getlongresp(self):
 		resp = self._getresp()
 		li = []
 		octets = 0
-		line, o = self._getresp()
+		line, o = self._getline()
 		while line != '.':
 			if line[:2] == '..':
 				o = o - 1
@@ -95,6 +104,17 @@ class POP3:
 		"""pass_ because pass is Python reserved word"""
 		return self._shortcmd('PASS %s' % password)
 
+#	def stat(self):
+#		"""Get mailbox status.
+#	
+#		Result is tuple of 2 ints (message count, mailbox size)
+#		"""
+#		retval = self._shortcmd('STAT')
+#		rets = retval.split()
+#		if self._debugging: print '*stat*', repr(rets)
+#		numMessages = int(rets[1])
+#		sizeMessages = int(rets[2])
+#		return (numMessages, sizeMessages)
 	def stat(self):
 		"""Get mailbox status
 		return is tuple of 2 ints (message count, mailbox size)
@@ -113,7 +133,7 @@ class POP3:
 		"""
 		if which is not None:
 			return self._shortcmd('LIST %s', which)
-		return self._shortcmd('LIST')
+		return self._longcmd('LIST')
 
 	def retr(self, which):
 		"""Retrieve whole msg number 'which'

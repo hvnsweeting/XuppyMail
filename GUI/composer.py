@@ -1,11 +1,9 @@
 import sys, os
-sys.path.append(os.path.dirname(os.path.abspath('../test/pop3lib.py')))
-import pop3lib
-import mysmtp
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from lib import mysmtp, pop3lib
 #import smtplib 
 #import poplib 
 import wx
-import os
 
 #TODO attach file
 #TODO split to many separate files
@@ -126,6 +124,8 @@ class InboxPanel(wx.Panel):
 	def __init__(self, parent):
 		wx.Panel.__init__(self,parent)
 		self.popObject = None
+		#this var help check whether user logged in or not
+		self.loginStatus = False
 
 		#Sizers
 		inboxVSizer = wx.BoxSizer(wx.VERTICAL)
@@ -176,6 +176,10 @@ class InboxPanel(wx.Panel):
 		self.statBtn = wx.Button(self, label="STAT")
 		self.Bind(wx.EVT_BUTTON, self.StatClick, self.statBtn)
 
+		#RSET
+		self.rsetBtn = wx.Button(self, label="RSET")
+		self.Bind(wx.EVT_BUTTON, self.RsetClick, self.rsetBtn)
+
 		#RETR
 		self.retrTc = wx.TextCtrl(self, size=(-1,-1))
 		self.retrBtn = wx.Button(self, label="RETR")
@@ -192,6 +196,7 @@ class InboxPanel(wx.Panel):
 		gridSizer.Add(self.deleBtn, pos=(0,3))
 		gridSizer.Add(self.listBtn, pos=(0,5))
 		gridSizer.Add(self.statBtn, pos=(0,6))
+		gridSizer.Add(self.rsetBtn, pos=(0,7))
 
 		inboxVSizer.Add(gridSizer, 0, wx.ALIGN_RIGHT)
 
@@ -211,6 +216,12 @@ class InboxPanel(wx.Panel):
 			for i in l:
 				parsed += str(i) + '\n'
 			self.logTc.AppendText(parsed)
+
+	def RsetClick(self, event):
+		"""Send RSET command"""
+		if self.loginStatus:
+			rsetMsg = self.popObject.rset() + "\n"
+			self.logTc.AppendText(rsetMsg)
 
 	def StatClick(self, event):
 		"""Send STAT command"""
@@ -237,7 +248,7 @@ class InboxPanel(wx.Panel):
 	def DeleClick(self, event):
 		"""Send DELE command"""
 		if self.loginStatus:
-			deleMsg = self.popObject.dele(int(self.deleTc.GetValue()))
+			deleMsg = self.popObject.dele(int(self.deleTc.GetValue())) + "\n"
 			self.logTc.AppendText(deleMsg)
 
 	def LoginClick(self, event):

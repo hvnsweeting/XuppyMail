@@ -1,12 +1,16 @@
-import smtplib #TODO change to Mine later
-import poplib #TODO change to mine later
+import sys, os
+sys.path.append(os.path.dirname(os.path.abspath('../test/pop3lib.py')))
+import pop3lib
+import mysmtp
+#import smtplib 
+#import poplib 
 import wx
 import os
 
 #TODO attach file
-#TODO Implement Pop3
 #TODO split to many separate files
 #NOTE: each control should use only once. If use more, they will break the form, and should add one to boxer right after we create it.
+
 class ComposerFrame(wx.Frame):
 	"""Frame for mail composer"""
 	def __init__(self, parent, title):
@@ -108,7 +112,7 @@ class ComposerPanel(wx.Panel):
 		recp = self.recvTc.GetValue()
 		msg = self.contentTc.GetValue()
 		#TODO need a parser to parse email address to host address
-		s = smtplib.SMTP('localhost')
+		s = mysmtp.SMTP('localhost')
 		s.sendmail(sender, recp, msg)
 		#TODO change status bar if mail sented
 
@@ -244,7 +248,8 @@ class InboxPanel(wx.Panel):
 		passwd = self.passTc.GetValue()
 
 		#TODO check port empty
-		self.popObject = poplib.POP3(host, int(port))
+		#TODO how to import lib from other folder
+		self.popObject = pop3lib.POP3(host, int(port))
 
 		#this var help check whether user logged in or not
 		self.loginStatus = False

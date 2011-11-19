@@ -170,19 +170,43 @@ class SMTP:
 
 	def sendmail(self, from_addr, to_addrs, msg):
 		self.helo()#TODO if needed
-		(code, resp) = self.mail(from_addr)
-		if code != 250:
-			raise SMTPSenderRefused(code, resp, from_addr)
+#		(code, resp) = self.mail(from_addr)
+#		if code != 250:
+#			raise SMTPSenderRefused(code, resp, from_addr)
+#
+#
+#		to_addrs = to_addrs[0] #TODO sent to many recp
+#		(code, resp) = self.rcpt(to_addrs)
+#		if code != 250:
+#		   raise SMTPServerDisconnected
+#		
+#		(code, resp) = self.data(msg)
+#		if code != 250:
+#			raise SMTPConnectError
+#
+#        self.ehlo_or_helo_if_needed()
 
-
-		to_addrs = to_addrs[0] #TODO sent to many recp
-		(code, resp) = self.rcpt(to_addrs)
+		(code,resp) = self.mail(from_addr)
 		if code != 250:
-		   raise SMTPServerDisconnected
-		
-		(code, resp) = self.data(msg)
+		    self.rset()
+		    raise SMTPSenderRefused(code, resp, from_addr)
+		senderrs={}
+		if isinstance(to_addrs, basestring):
+		    to_addrs = [to_addrs]
+		for each in to_addrs:
+			(code,resp)=self.rcpt(each)
+			if (code != 250) and (code != 251):
+				senderrs[each]=(code,resp)
+		if len(senderrs)==len(to_addrs):
+		    # the server refused all our recipients
+		    self.rset()
+		    raise SMTPRecipientsRefused(senderrs)
+		(code,resp) = self.data(msg)
 		if code != 250:
-			raise SMTPConnectError
+		    self.rset()
+		    raise SMTPDataError(code, resp)
+		#if we got here then somebody got our mail
+		return senderrs
 
 	def close(self):
 		"""Close connection to the SMTP server"""

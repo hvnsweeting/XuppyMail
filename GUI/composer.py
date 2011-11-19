@@ -1,5 +1,5 @@
 import sys, os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) #add XuppyMail to path
 from lib import mysmtp, pop3lib
 #import smtplib 
 #import poplib 

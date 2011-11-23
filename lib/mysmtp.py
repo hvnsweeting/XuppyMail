@@ -184,11 +184,9 @@ class SMTP:
 #		if code != 250:
 #			raise SMTPConnectError
 #
-#        self.ehlo_or_helo_if_needed()
 
 		(code,resp) = self.mail(from_addr)
 		if code != 250:
-		    self.rset()
 		    raise SMTPSenderRefused(code, resp, from_addr)
 		senderrs={}
 		if isinstance(to_addrs, basestring):

@@ -10,8 +10,6 @@ import aparser
 
 #import smtplib 
 #import poplib 
-#TODO attach file
-#TODO cut off the long subject
 #TODO split to many separate files
 #NOTE: each control should use only once. If use more, they will break the form, and should add one to boxer right after we create it.
 
@@ -33,7 +31,6 @@ class ComposerFrame(wx.Frame):
 		
 		#Set menu events
 		self.Bind(wx.EVT_MENU, self.OnAbout, menuAbout)
-		#self.Bind(wx.EVT_MENU, self.OnLogin, menuLogin)
 		self.Bind(wx.EVT_MENU, self.OnExit, menuExit)
 
 		#Status bar
@@ -132,6 +129,7 @@ class InboxPanel(wx.Panel):
 		self.popObject = None
 		#this var help check whether user logged in or not
 		self.loginStatus = False
+		self.fourTc = None
 
 		#Sizers
 		inboxVSizer = wx.BoxSizer(wx.VERTICAL)
@@ -173,6 +171,7 @@ class InboxPanel(wx.Panel):
 		inboxVSizer.Add(bindHSizer, 0, wx.EXPAND)
 		inboxVSizer.Add(loginHSizer, 0, wx.EXPAND)
 
+		self.fourTc = [self.hostTc, self.portTc, self.userTc, self.passTc]
 
 		#Multiline text control
 		self.logTc = wx.TextCtrl(self, style=wx.TE_MULTILINE | wx.TE_READONLY)
@@ -230,10 +229,14 @@ class InboxPanel(wx.Panel):
 		self.downloadAllBtn = wx.Button(self, label="Download All")
 		self.Bind(wx.EVT_BUTTON, self.DownloadAllClick, self.downloadAllBtn)
 
+		self.logoutBtn = wx.Button(self, label='Logout')
+		self.Bind(wx.EVT_BUTTON, self.LogoutClick, self.logoutBtn)
+
 		downloadGridSizer.Add(self.downloadLbl, pos=(0,0))
 		downloadGridSizer.Add(self.downloadTc, pos=(0,1))
 		downloadGridSizer.Add(self.downloadBtn, pos=(0,2))
 		downloadGridSizer.Add(self.downloadAllBtn, pos=(0,3))
+		downloadGridSizer.Add(self.logoutBtn, pos=(0,4))
 
 		gridSizer.Add(self.retrTc, pos=(0,0))
 		gridSizer.Add(self.retrBtn, pos=(0,1))
@@ -259,34 +262,17 @@ class InboxPanel(wx.Panel):
 		sp = '-' * 20 + '*' * 10 + '-' * 20 + '\n'
 		self.logTc.AppendText(sp)
 	
-#	def ListClick(self, event):
-#		"""Send LIST POP3's command"""
-#		if self.loginStatus:
-#			listMsg = list(self.popObject.list())
-#			l = list(listMsg)
-#			parsed = ''
-#			for i in l:
-#				parsed += str(i) + '\n'
-#			self.logTc.AppendText(parsed)
-
 	def RsetClick(self, event):
 		"""Send RSET command"""
 		if self.loginStatus:
 			rsetMsg = self.popObject.rset() + "\n"
 			self.logTc.AppendText(rsetMsg)
 
-#	def StatClick(self, event):
-#		"""Send STAT command"""
-#		if self.loginStatus:
-#			statMsg = list(self.popObject.stat())
-#			parsed = 'You have ' + str(statMsg[0]) + ' mails = ' + str(statMsg[1]) + ' bytes\n'
-#			self.logTc.AppendText(parsed)
-
 	def RetrClick(self, event):
 		"""Send RETR command"""
 		#TODO add check if a message is deleted
-		if self.loginStatus:
-			i = int(self.retrTc.GetValue())
+		i = int(self.retrTc.GetValue())
+		if self.loginStatus and i <= self.numberOfMsg:
 			form = map(lambda i : str(i) + '\n', self.popObject.retr(i)[1])
 			self.msg = ('',''.join(form))[1]
 			info = aparser.parse(self.msg)
@@ -301,7 +287,9 @@ class InboxPanel(wx.Panel):
 			
 	def DeleClick(self, event):
 		"""Send DELE command"""
-		if self.loginStatus:
+		i = int(self.deleTc.GetValue())
+		if self.loginStatus and i <= self.numberOfMsg:
+
 			deleMsg = self.popObject.dele(int(self.deleTc.GetValue())) + "\n"
 			self.logTc.AppendText(deleMsg)
 
@@ -310,6 +298,7 @@ class InboxPanel(wx.Panel):
 		self.logTc.AppendText(self.popObject.getwelcome() + '\n')
 		self.logTc.AppendText('Welcome back, ' + username + '!\n')
 		statMsg = list(self.popObject.stat())
+		self.numberOfMsg = statMsg[0]
 		parsed = 'You have ' + str(statMsg[0]) + ' mails = ' + str(statMsg[1]) + ' bytes\n'
 		self.logTc.AppendText(parsed)
 
@@ -349,26 +338,33 @@ class InboxPanel(wx.Panel):
 		self.loginStatus = passMsg.__eq__('+OK Logged in.')
 		if self.loginStatus:
 			#Set all text control to immutable
-			self.hostTc.SetEditable(False)
-			self.portTc.SetEditable(False)
-			self.userTc.SetEditable(False)
-			self.passTc.SetEditable(False)
+			for tc in self.fourTc:
+				tc.SetEditable(False)
 			#get current frame and set status text
 			self.GetParent().GetParent().SetStatusText('Logged in') 
 			#Print welcome info
 			self.PrintLoggedIn(username, userMsg, passMsg)
 
 	def DownloadClick(self, e):
-		download.download(email.message_from_string(self.msg), '/home/famihug/out/', self.downloadTc.GetValue())
+		if self.loginStatus:
+			download.download(email.message_from_string(self.msg), '/home/famihug/out/', self.downloadTc.GetValue())
 
 	def DownloadAllClick(self, e):
-		download.download(email.message_from_string(self.msg), '/home/famihug/out/', 1000)
+		if self.loginStatus:
+			download.download(email.message_from_string(self.msg), '/home/famihug/out/', 1000)
 
-		#TODO use quit() TO DELETE MSG
-		#self.popObject.quit()
+	def LogoutClick(self, e):
+		if self.loginStatus:
+			#enable all control
+			self.popObject.quit()
+			self.loginStatus = False
+			for tc in self.fourTc:
+				tc.SetEditable(True)
+				tc.SetValue('')
 
-
-	
+			self.logTc.SetValue('Logged out')
+			#get current frame and set status text
+			self.GetParent().GetParent().SetStatusText('Not login') 
 
 
 app = wx.App(False)

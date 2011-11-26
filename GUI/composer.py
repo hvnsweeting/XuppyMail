@@ -1,11 +1,17 @@
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) #add XuppyMail to path
-from lib import mysmtp, pop3lib
+from lib import mysmtp#, pop3lib 
+import download
+import poplib as pop3lib
+import email
+from email.mime.text import MIMEText
+import wx
+import aparser
+
 #import smtplib 
 #import poplib 
-import wx
-
 #TODO attach file
+#TODO cut off the long subject
 #TODO split to many separate files
 #NOTE: each control should use only once. If use more, they will break the form, and should add one to boxer right after we create it.
 
@@ -60,8 +66,8 @@ class ComposerPanel(wx.Panel):
 		#Create some sizer
 		mainVSizer = wx.BoxSizer(wx.VERTICAL)
 		buttonHSizer = wx.BoxSizer(wx.HORIZONTAL)
-		fromHSizer = wx.BoxSizer(wx.HORIZONTAL)
 		recvHSizer = wx.BoxSizer(wx.HORIZONTAL)
+		fromHSizer = wx.BoxSizer(wx.HORIZONTAL)
 		subjectHSizer = wx.BoxSizer(wx.HORIZONTAL)
 		
 
@@ -130,8 +136,12 @@ class InboxPanel(wx.Panel):
 		#Sizers
 		inboxVSizer = wx.BoxSizer(wx.VERTICAL)
 		gridSizer = wx.GridBagSizer(hgap=5, vgap=5)
-		bindHSizer = wx.BoxSizer(wx.HORIZONTAL)
 		loginHSizer = wx.BoxSizer(wx.HORIZONTAL)
+		bindHSizer = wx.BoxSizer(wx.HORIZONTAL)
+		subjectHSizer = wx.BoxSizer(wx.HORIZONTAL)
+		fromHSizer = wx.BoxSizer(wx.HORIZONTAL)
+		attachHSizer = wx.BoxSizer(wx.HORIZONTAL)
+		downloadGridSizer = wx.GridBagSizer(hgap=5, vgap=5)
 
 		#Login : host, port, user, pass
 		self.hostLbl = wx.StaticText(self, label="Host:")
@@ -168,13 +178,13 @@ class InboxPanel(wx.Panel):
 		self.logTc = wx.TextCtrl(self, style=wx.TE_MULTILINE | wx.TE_READONLY)
 		inboxVSizer.Add(self.logTc, 1, wx.EXPAND)
 
-		#LIST
-		self.listBtn = wx.Button(self, label="LIST")
-		self.Bind(wx.EVT_BUTTON, self.ListClick, self.listBtn)
+	#	#LIST
+	#	self.listBtn = wx.Button(self, label="LIST")
+	#	self.Bind(wx.EVT_BUTTON, self.ListClick, self.listBtn)
 
-		#STAT
-		self.statBtn = wx.Button(self, label="STAT")
-		self.Bind(wx.EVT_BUTTON, self.StatClick, self.statBtn)
+	#	#STAT
+	#	self.statBtn = wx.Button(self, label="STAT")
+	#	self.Bind(wx.EVT_BUTTON, self.StatClick, self.statBtn)
 
 		#RSET
 		self.rsetBtn = wx.Button(self, label="RSET")
@@ -190,15 +200,57 @@ class InboxPanel(wx.Panel):
 		self.deleBtn = wx.Button(self, label="DELE")
 		self.Bind(wx.EVT_BUTTON, self.DeleClick, self.deleBtn)
 
+		#Subject
+		self.subjectLbl = wx.StaticText(self, label='Subject')
+		subjectHSizer.Add(self.subjectLbl, 0, wx.EXPAND)
+		self.subjectTc = wx.TextCtrl(self, style=wx.TE_READONLY)
+		subjectHSizer.Add(self.subjectTc, 1, wx.EXPAND)
+
+		#From:
+		self.fromLbl = wx.StaticText(self, label='From')
+		fromHSizer.Add(self.fromLbl, 0, wx.EXPAND)
+		self.fromTc = wx.TextCtrl(self, style=wx.TE_READONLY)
+		fromHSizer.Add(self.fromTc, 1, wx.EXPAND)
+		
+		#Attach
+		self.attachLbl = wx.StaticText(self, label='Attachment: 0 file(s)')
+		attachHSizer.Add(self.attachLbl, 0, wx.EXPAND)
+		self.attachTc = wx.TextCtrl(self, style=wx.TE_READONLY)
+		attachHSizer.Add(self.attachTc, 1, wx.EXPAND)
+
+		#Read mail panel
+		self.readTc = wx.TextCtrl(self, style=wx.TE_MULTILINE | wx.TE_READONLY)
+		#Download
+		self.downloadLbl = wx.StaticText(self, label='File #')
+		self.downloadTc = wx.TextCtrl(self)
+
+		self.downloadBtn = wx.Button(self, label="Download")
+		self.Bind(wx.EVT_BUTTON, self.DownloadClick, self.downloadBtn)
+
+		self.downloadAllBtn = wx.Button(self, label="Download All")
+		self.Bind(wx.EVT_BUTTON, self.DownloadAllClick, self.downloadAllBtn)
+
+		downloadGridSizer.Add(self.downloadLbl, pos=(0,0))
+		downloadGridSizer.Add(self.downloadTc, pos=(0,1))
+		downloadGridSizer.Add(self.downloadBtn, pos=(0,2))
+		downloadGridSizer.Add(self.downloadAllBtn, pos=(0,3))
+
 		gridSizer.Add(self.retrTc, pos=(0,0))
 		gridSizer.Add(self.retrBtn, pos=(0,1))
 		gridSizer.Add(self.deleTc, pos=(0,2))
 		gridSizer.Add(self.deleBtn, pos=(0,3))
-		gridSizer.Add(self.listBtn, pos=(0,5))
-		gridSizer.Add(self.statBtn, pos=(0,6))
+	#	gridSizer.Add(self.listBtn, pos=(0,5))
+	#	gridSizer.Add(self.statBtn, pos=(0,6))
 		gridSizer.Add(self.rsetBtn, pos=(0,7))
 
 		inboxVSizer.Add(gridSizer, 0, wx.ALIGN_RIGHT)
+
+		#inboxVSizer.Add(wx.StaticLine(self, ), 0, wx.ALL|wx.EXPAND, 5)
+		inboxVSizer.Add(subjectHSizer, 0, wx.EXPAND)
+		inboxVSizer.Add(fromHSizer, 0, wx.EXPAND)
+		inboxVSizer.Add(attachHSizer, 0, wx.EXPAND)
+		inboxVSizer.Add(self.readTc, 1, wx.EXPAND)
+		inboxVSizer.Add(downloadGridSizer, 0, wx.ALIGN_RIGHT)
 
 		self.SetSizerAndFit(inboxVSizer)
 
@@ -207,15 +259,15 @@ class InboxPanel(wx.Panel):
 		sp = '-' * 20 + '*' * 10 + '-' * 20 + '\n'
 		self.logTc.AppendText(sp)
 	
-	def ListClick(self, event):
-		"""Send LIST POP3's command"""
-		if self.loginStatus:
-			listMsg = list(self.popObject.list())
-			l = list(listMsg)
-			parsed = ''
-			for i in l:
-				parsed += str(i) + '\n'
-			self.logTc.AppendText(parsed)
+#	def ListClick(self, event):
+#		"""Send LIST POP3's command"""
+#		if self.loginStatus:
+#			listMsg = list(self.popObject.list())
+#			l = list(listMsg)
+#			parsed = ''
+#			for i in l:
+#				parsed += str(i) + '\n'
+#			self.logTc.AppendText(parsed)
 
 	def RsetClick(self, event):
 		"""Send RSET command"""
@@ -223,33 +275,54 @@ class InboxPanel(wx.Panel):
 			rsetMsg = self.popObject.rset() + "\n"
 			self.logTc.AppendText(rsetMsg)
 
-	def StatClick(self, event):
-		"""Send STAT command"""
-		if self.loginStatus:
-			statMsg = list(self.popObject.stat())
-			parsed = 'You have ' + str(statMsg[0]) + ' mails = ' + str(statMsg[1]) + ' bytes\n'
-			self.logTc.AppendText(parsed)
+#	def StatClick(self, event):
+#		"""Send STAT command"""
+#		if self.loginStatus:
+#			statMsg = list(self.popObject.stat())
+#			parsed = 'You have ' + str(statMsg[0]) + ' mails = ' + str(statMsg[1]) + ' bytes\n'
+#			self.logTc.AppendText(parsed)
 
 	def RetrClick(self, event):
 		"""Send RETR command"""
 		#TODO add check if a message is deleted
 		if self.loginStatus:
-			retrMsg = self.popObject.retr(int(self.retrTc.GetValue()))
-			parsed = ''
-			for i in retrMsg:
-				if isinstance(i, list):
-					for k in i:
-						parsed += k + '\n'
-				else: parsed += str(i) + '\n'
-
-			self.logTc.AppendText(parsed)
-			self.PrintSl()
+			i = int(self.retrTc.GetValue())
+			form = map(lambda i : str(i) + '\n', self.popObject.retr(i)[1])
+			self.msg = ('',''.join(form))[1]
+			info = aparser.parse(self.msg)
+			self.subjectTc.SetValue(info['subject'])
+			self.fromTc.SetValue(info['from'])
+			self.readTc.SetValue(info['body'])
+			self.attachLbl.SetLabel('Attachment: %d file(s)' % len(info['attachments']))
+			s = ''
+			for a in info['attachments']:
+				s += str(info['attachments'].index(a)) + '.' + a.name + '  '
+			self.attachTc.SetValue(s)
 			
 	def DeleClick(self, event):
 		"""Send DELE command"""
 		if self.loginStatus:
 			deleMsg = self.popObject.dele(int(self.deleTc.GetValue())) + "\n"
 			self.logTc.AppendText(deleMsg)
+
+	def PrintLoggedIn(self, username, userMsg, passMsg):
+		"""Print welcome, user, list of msg"""
+		self.logTc.AppendText(self.popObject.getwelcome() + '\n')
+		self.logTc.AppendText('Welcome back, ' + username + '!\n')
+		statMsg = list(self.popObject.stat())
+		parsed = 'You have ' + str(statMsg[0]) + ' mails = ' + str(statMsg[1]) + ' bytes\n'
+		self.logTc.AppendText(parsed)
+
+		#print info of all email
+		for i in range(1, statMsg[0]+1):
+			#add \n char to all string
+			form = map(lambda i : str(i) + '\n', self.popObject.retr(i)[1])
+			msg = ('',''.join(form))[1]
+			info = aparser.parse(msg)
+			s = (str(i), info['date'].split()[0], info['from'], info['subject'], str(len(info['attachments'])))
+			string = '%s %s %20.20s "%30.30s" Att %s' % s
+			#print string + '\n'
+			self.logTc.AppendText(string + '\n')
 
 	def LoginClick(self, event):
 		"""Create POP3 object which connect to specified host, port and login"""
@@ -258,8 +331,13 @@ class InboxPanel(wx.Panel):
 		username = self.userTc.GetValue()
 		passwd = self.passTc.GetValue()
 
+		#TODO: remove this when done
+		host = 'localhost'
+		port = '110'
+		username = 'famihug'
+		passwd = 'loved@le'
+
 		#TODO check port empty
-		#TODO how to import lib from other folder
 		self.popObject = pop3lib.POP3(host, int(port))
 
 		#this var help check whether user logged in or not
@@ -267,10 +345,6 @@ class InboxPanel(wx.Panel):
 
 		userMsg = self.popObject.user(username)
 		passMsg = self.popObject.pass_(passwd)
-
-		self.logTc.AppendText(self.popObject.getwelcome() + '\n')
-		self.logTc.AppendText('USER: ' + username + '\n' + userMsg + '\n')
-		self.logTc.AppendText('PASS: ' + passMsg + '\n')
 
 		self.loginStatus = passMsg.__eq__('+OK Logged in.')
 		if self.loginStatus:
@@ -281,6 +355,20 @@ class InboxPanel(wx.Panel):
 			self.passTc.SetEditable(False)
 			#get current frame and set status text
 			self.GetParent().GetParent().SetStatusText('Logged in') 
+			#Print welcome info
+			self.PrintLoggedIn(username, userMsg, passMsg)
+
+	def DownloadClick(self, e):
+		download.download(email.message_from_string(self.msg), '/home/famihug/out/', self.downloadTc.GetValue())
+
+	def DownloadAllClick(self, e):
+		download.download(email.message_from_string(self.msg), '/home/famihug/out/', 1000)
+
+		#TODO use quit() TO DELETE MSG
+		#self.popObject.quit()
+
+
+	
 
 
 app = wx.App(False)

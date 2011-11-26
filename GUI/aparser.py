@@ -47,16 +47,24 @@ def parse_attachment(message_part):
 
 def parse_date(time):
 	"""Parse RFC2822 time format to %Y/%m/%d %H:%M:%S"""
-	stripoff = time.split('+')
-	t = strptime(stripoff[0], "%a, %d %b %Y %H:%M:%S ")
-	return strftime("%Y/%m/%d %H:%M:%S", t)
+	if time is None:
+		return None
+	else:
+		stripoff = time.split('+')
+		t = strptime(stripoff[0], "%a, %d %b %Y %H:%M:%S ")
+		return strftime("%Y/%m/%d %H:%M:%S", t)
 
 def parse(content):
     """
 	parse email
     """
     p = EmailParser()
-    msgobj = p.parse(content)
+	#check content is a file or text
+	#if content is path...
+
+    #msgobj = p.parse(content)
+	
+    msgobj = p.parsestr(content)
     if msgobj['Subject'] is not None:
         decodefrag = decode_header(msgobj['Subject'])
         subj_fragments = []

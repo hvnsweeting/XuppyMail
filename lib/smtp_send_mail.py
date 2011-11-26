@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-import simple_smtp
+import smtplib
 
 sender = 'hvn@familug.com'
-receivers = ['famihug@hvn.vn']
+receivers = ['famihug@localhost']
 
 message = """From: From Person <hvn@familug.com>
 To: To Person <famihug@hvn.vn>
@@ -12,7 +12,7 @@ Thang NAM bi dien
 """
 
 try:
-   smtpObj = simple_smtp.SMTP('localhost', 25)
+   smtpObj = smtplib.SMTP('localhost', 25)
    smtpObj.sendmail(sender, receivers, message)         
    print "Successfully sent email"
 except SMTPException:

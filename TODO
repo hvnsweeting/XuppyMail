@@ -3,3 +3,18 @@ file browser
 gui attach
 attach to composer - loadbar
 table
+
+#New design
+1 text control contain number of msg, total size,
+  1 list multiline of ID - date - subject - attachment
+  a text control + button to retrieve
+
+  From
+  To
+  Subject
+  Body
+  button help download attachment
+  
+
+In composer mode, use multiprocessing to decode file to string
+Add file browser button

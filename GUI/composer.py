@@ -345,13 +345,27 @@ class InboxPanel(wx.Panel):
 			#Print welcome info
 			self.PrintLoggedIn(username, userMsg, passMsg)
 
+	#Open a new dialog to choose where to save file
+
+	def chooseDirectory(self):
+		"""Choose download destination directory"""
+		self.dirname = ''
+		dlg = wx.DirDialog(self, "Choose download location...", )
+		if dlg.ShowModal() == wx.ID_OK:
+			self.dirname = dlg.GetPath()
+		dlg.Destroy()
+
 	def DownloadClick(self, e):
+		"""Download the given numberth file"""
 		if self.loginStatus:
-			download.download(email.message_from_string(self.msg), '/home/famihug/out/', self.downloadTc.GetValue())
+			self.chooseDirectory()
+			download.download(email.message_from_string(self.msg), self.dirname, self.downloadTc.GetValue())
 
 	def DownloadAllClick(self, e):
+		"""Download all files"""
 		if self.loginStatus:
-			download.download(email.message_from_string(self.msg), '/home/famihug/out/', 1000)
+			self.chooseDirectory()
+			download.download(email.message_from_string(self.msg), self.dirname, 1000)
 
 	def LogoutClick(self, e):
 		if self.loginStatus:

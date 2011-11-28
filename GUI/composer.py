@@ -71,6 +71,8 @@ class ComposerPanel(wx.Panel):
 
 		#Message object
 		self.msg = MIMEMultipart()
+		self.payloadLs = self.msg.get_payload()
+		self.bodyid = len(self.payloadLs) - 1
 
 		#Create some sizer
 		mainVSizer = wx.BoxSizer(wx.VERTICAL)
@@ -166,10 +168,11 @@ class ComposerPanel(wx.Panel):
 		self.msg['From'] = sender
 		self.msg.attach(body)
 
-		last = len(self.payloadLs) - 1
-		self.payloadLs[self.bodyid] = self.payloadLs[-1]
-		self.payloadLs.__delitem__(last)
-		self.msg.set_payload(self.payloadLs)
+		if self.payloadLs:
+			last = len(self.payloadLs) - 1
+			self.payloadLs[self.bodyid] = self.payloadLs[-1]
+			self.payloadLs.__delitem__(last)
+			self.msg.set_payload(self.payloadLs)
 
 
 		composed = self.msg.as_string()

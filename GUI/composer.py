@@ -1,12 +1,20 @@
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) #add XuppyMail to path
 from lib import mysmtp#, pop3lib 
+#import smtplib as mysmtp
 import download
 import poplib as pop3lib
 import email
-from email.mime.text import MIMEText
 import wx
-import aparser
+import aparser, attach
+import mimetypes
+from email import encoders
+from email.message import Message
+from email.mime.audio import MIMEAudio
+from email.mime.base import MIMEBase
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 #import smtplib 
 #import poplib 
@@ -56,9 +64,13 @@ class ComposerFrame(wx.Frame):
 
 #Composer panel tab
 class ComposerPanel(wx.Panel):
+	#TODO user RFC email header, add subject, multiprocess attachment
 	"""Panel for mail composer"""
 	def __init__(self, parent):
 		wx.Panel.__init__(self, parent)
+
+		#Message object
+		self.msg = MIMEMultipart()
 
 		#Create some sizer
 		mainVSizer = wx.BoxSizer(wx.VERTICAL)
@@ -66,6 +78,7 @@ class ComposerPanel(wx.Panel):
 		recvHSizer = wx.BoxSizer(wx.HORIZONTAL)
 		fromHSizer = wx.BoxSizer(wx.HORIZONTAL)
 		subjectHSizer = wx.BoxSizer(wx.HORIZONTAL)
+		attachHSizer = wx.BoxSizer(wx.HORIZONTAL)
 		
 
 		self.fromLbl = wx.StaticText(self, label="From:")
@@ -87,6 +100,16 @@ class ComposerPanel(wx.Panel):
 		self.subjectTc = wx.TextCtrl(self, size=(-1, -1)) 
 		subjectHSizer.Add(self.subjectTc, 1, wx.EXPAND)
 
+		#Attach
+		self.attachLbl = wx.StaticText(self, label='Attachment:')
+		self.attachTc = wx.TextCtrl(self)
+		self.attachBtn = wx.Button(self, label='Add')
+		self.Bind(wx.EVT_BUTTON, self.AddClick, self.attachBtn)
+
+		attachHSizer.Add(self.attachLbl, 0)
+		attachHSizer.Add(self.attachTc, 1, wx.EXPAND)
+		attachHSizer.Add(self.attachBtn, 0)
+
 		#Content tc - multiline
 		self.contentTc = wx.TextCtrl(self, style=wx.TE_MULTILINE)
 
@@ -102,19 +125,58 @@ class ComposerPanel(wx.Panel):
 		mainVSizer.Add(fromHSizer, 0, wx.EXPAND)
 		mainVSizer.Add(recvHSizer, 0, wx.EXPAND)
 		mainVSizer.Add(subjectHSizer, 0, wx.EXPAND)
+		mainVSizer.Add(attachHSizer, 0, wx.EXPAND)
 		mainVSizer.Add(self.contentTc, 1, wx.EXPAND)
 		mainVSizer.Add(buttonHSizer, 0, wx.ALL, 5)
 
 		self.SetSizerAndFit(mainVSizer)
 
+
+
+	def AddClick(self, event):
+		"""Attach a file to email"""
+		body = MIMEText(self.contentTc.GetValue())
+		self.msg.attach(body)
+		self.payloadLs = self.msg.get_payload()
+		self.bodyid = len(self.payloadLs) - 1
+
+		#Choose file
+		self.dirname = ''
+		dlg = wx.FileDialog(self, "Choose a file", self.dirname, "", "*.*", wx.OPEN)
+		if dlg.ShowModal() == wx.ID_OK: #user cannot do anything on app util click ok or cancel
+			#dlg.ShowModal() return ID of button pressed
+			self.filename = dlg.GetFilename()
+			self.dirname = dlg.GetDirectory()
+			#f = open(os.path.join(self.dirname, self.filename), 'r')
+			#TODO attach here
+			att = attach.attachfile(os.path.join(self.dirname, self.filename), self.filename)
+			self.msg.attach(att)
+		dlg.Destroy()
+		self.attachTc.AppendText(self.filename + ' ')
+
 	def SendClick(self, event):
 		"""Send mail """
 		sender = self.fromTc.GetValue()
 		recp = self.recvTc.GetValue()
-		msg = self.contentTc.GetValue()
+		subj = self.subjectTc.GetValue()
+		body = MIMEText(self.contentTc.GetValue())
+
+		self.msg['Subject'] = subj
+		self.msg['To'] = recp
+		self.msg['From'] = sender
+		self.msg.attach(body)
+
+		last = len(self.payloadLs) - 1
+		self.payloadLs[self.bodyid] = self.payloadLs[-1]
+		self.payloadLs.__delitem__(last)
+		self.msg.set_payload(self.payloadLs)
+
+
+		composed = self.msg.as_string()
 		#TODO need a parser to parse email address to host address
 		s = mysmtp.SMTP('localhost')
-		s.sendmail(sender, recp, msg)
+		#TODO fix no rset bug
+		s.sendmail(sender, recp, composed)
 		#TODO change status bar if mail sented
 
 	def ClearClick(self, event):

@@ -148,6 +148,9 @@ class SMTP:
 		""" SMTP 'MAIL' command"""
 		self.putcmd("mail", "FROM:%s" % (quoteaddr(sender)))
 		return self.getreply()
+	def rset(self):
+		"""smtp 'rset' command -- resets session."""
+		return self.docmd("rset")
 
 	def rcpt(self, recip):
 		""" SMTP 'RCPT' command """

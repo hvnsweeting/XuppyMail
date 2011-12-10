@@ -1,9 +1,9 @@
 import sys, os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) #add XuppyMail to path
-from lib import mysmtp#, pop3lib 
-#import smtplib as mysmtp
+#sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) #add XuppyMail to path
+#from lib import smtplib#, poplib 
+#import smtplib as smtplib
 import download
-import poplib as pop3lib
+import poplib, smtplib
 import email
 import wx
 import aparser, attach
@@ -16,8 +16,6 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-#import smtplib 
-#import poplib 
 #TODO split to many separate files
 #NOTE: each control should use only once. If use more, they will break the form, and should add one to boxer right after we create it.
 
@@ -177,7 +175,7 @@ class ComposerPanel(wx.Panel):
 
 		composed = self.msg.as_string()
 		#TODO need a parser to parse email address to host address
-		s = mysmtp.SMTP('localhost')
+		s = smtplib.SMTP('localhost')
 		#TODO fix no rset bug
 		s.sendmail(sender, recp, composed)
 		#TODO change status bar if mail sented
@@ -392,7 +390,7 @@ class InboxPanel(wx.Panel):
 		passwd = 'loved@le'
 
 		#TODO check port empty
-		self.popObject = pop3lib.POP3(host, int(port))
+		self.popObject = poplib.POP3(host, int(port))
 
 		#this var help check whether user logged in or not
 		self.loginStatus = False
